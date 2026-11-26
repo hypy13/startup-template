@@ -2,6 +2,50 @@
 
 A minimal Turborepo starter with Next.js, Django, PostgreSQL, Redis, and Celery. It includes a small health check as an example of the frontend component, Zustand store, and service layers.
 
+## Start a project from this template
+
+### Create your own repository on GitHub
+
+1. Open the [startup-template repository](https://github.com/hypy13/startup-template) and choose **Use this template → Create a new repository**.
+2. Choose your account or organization, enter a project name, and create the repository. GitHub copies the default branch files into a new repository with its own initial commit. [GitHub's template guide](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+3. Clone your **new** repository. Replace `YOUR-ACCOUNT` and `my-project` with your repository details.
+
+   ```sh
+   git clone https://github.com/YOUR-ACCOUNT/my-project.git
+   cd my-project
+   git remote -v
+   ```
+
+   The fetch and push URLs for `origin` should both point to your new repository.
+
+If the **Use this template** button is missing, a repository admin can enable **Settings → General → Template repository**. You can also use the clone-and-switch method below. [GitHub's template settings guide](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)
+
+### Clone directly and switch to your own repository
+
+A direct clone sets `origin` to `hypy13/startup-template`. To use that clone for your project, first create an empty GitHub repository under your account or organization. Leave the README, `.gitignore`, and license options unchecked so the destination has no initial commit.
+
+```sh
+git clone https://github.com/hypy13/startup-template.git my-project
+cd my-project
+git remote set-url origin https://github.com/YOUR-ACCOUNT/my-project.git
+git remote -v
+```
+
+If you already cloned the template, start at `git remote set-url` from inside that clone. Once both `origin` URLs show your repository, push your current branch and set its upstream.
+
+```sh
+git push -u origin HEAD
+```
+
+This method carries the template's commit history into your project. [GitHub's remote URL guide](https://docs.github.com/en/get-started/git-basics/managing-remote-repositories)
+
+### Run and customize your project
+
+1. Follow [Development with Docker](#development-with-docker) to create your local `.env`, start the stack, and apply the database migrations. For a setup without Docker, follow [Local development](#local-development).
+2. Open `http://localhost:3000` and check that the sample page can reach the Django API. The API also responds directly at `http://localhost:8000/api/health/`.
+3. Replace the sample homepage in `apps/web/src/app/page.tsx` and add your Django apps under `apps/api/` alongside `config/`. Add project-specific API routes in `apps/api/config/urls.py` or include URL configurations from your Django apps.
+4. If you deploy through GitHub Actions, configure the production environment and secrets in **your new repository**. See [Deploy from GitHub Actions](#deploy-from-github-actions).
+
 ## Requirements
 
 Docker and Docker Compose for the container workflow. For local development, use Node.js 22, pnpm 10, Python 3.12 or 3.13, uv, PostgreSQL, and Redis.
