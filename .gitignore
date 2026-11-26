@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.turbo/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+!.env.production.example
+staticfiles/
+coverage/

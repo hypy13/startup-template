@@ -1,0 +1,67 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - name: Check out the selected revision
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Deploy with Docker Compose over SSH
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          : "${DEPLOY_HOST:?Set the DEPLOY_HOST variable}"
+          : "${DEPLOY_USER:?Set the DEPLOY_USER variable}"
+          : "${DEPLOY_SSH_PRIVATE_KEY:?Set the DEPLOY_SSH_PRIVATE_KEY secret}"
+          : "${DEPLOY_SSH_KNOWN_HOSTS:?Set the DEPLOY_SSH_KNOWN_HOSTS secret}"
+
+          umask 077
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+
+          git archive --format=tar.gz HEAD | ssh -T -i "$ssh_dir/key" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+            -l "$DEPLOY_USER" -- "$DEPLOY_HOST" '
+              set -eu
+              env_file="$HOME/startup-template/.env.production"
+              if [ ! -r "$env_file" ]; then
+                printf "Missing production environment file: %s\n" "$env_file" >&2
+                exit 1
+              fi
+
+              release_dir=$(mktemp -d)
+              cleanup() {
+                rm -rf -- "$release_dir"
+              }
+              trap cleanup EXIT
+              tar -xzf - -C "$release_dir"
+              cd "$release_dir"
+
+              docker compose --project-name startup-template --env-file "$env_file" \
+                -f compose.production.yaml up --build --detach --wait --wait-timeout 120
+              curl --fail --silent --show-error --max-time 5 --retry 30 \
+                --retry-all-errors --retry-delay 2 http://127.0.0.1:3000/api/health/
+            '
