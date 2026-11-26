@@ -46,6 +46,12 @@ This method carries the template's commit history into your project. [GitHub's r
 3. Replace the sample homepage in `apps/web/src/app/page.tsx` and add your Django apps under `apps/api/` alongside `config/`. Add project-specific API routes in `apps/api/config/urls.py` or include URL configurations from your Django apps.
 4. If you deploy through GitHub Actions, configure the production environment and secrets in **your new repository**. See [Deploy from GitHub Actions](#deploy-from-github-actions).
 
+### Bring in later template improvements
+
+In Codex, open your project repository and run `$update-startup-template` from the branch you want to update. The skill fetches the template's latest default branch, identifies the template version already in your project, and prepares the changes on a local `sync-startup-template-*` branch for review. It works with both GitHub-generated repositories and direct clones. Say `$update-startup-template check only` to see the update summary before creating a branch.
+
+If your project predates the skill, copy [`.agents/skills/update-startup-template/`](.agents/skills/update-startup-template/) from a current template checkout into the same location in your project and commit that folder first. Start the update with a clean working tree. If the original template version cannot be identified, supply the full SHA of the template commit your project last incorporated. Keep `.startup-template-version` with the reviewed changes when you merge them into your project so later updates start from that version.
+
 ## Requirements
 
 Docker and Docker Compose for the container workflow. For local development, use Node.js 22, pnpm 10, Python 3.12 or 3.13, uv, PostgreSQL, and Redis.
